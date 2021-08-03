@@ -56,69 +56,77 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
             json: true
         };
         request(options, function (error619, res1, body1) {
-            if (res1.body.docs == null && res1.body.toLowerCase().includes("rate limit")) {
-                let sleepTime = parseInt(res1.body.toLowerCase().split("retry in ")[1].split(" m")[0]) * 1000;
-                if (sleepTime > 30000) {
-                    sleepTime = sleepTime / 1000
-                } else if (sleepTime < 0) {
-                    sleepTime = 30000
-                } else {
-                    sleepTime = 1000
-                }
-                // console.log(`Waiting for ${sleepTime}ms (Ratelimit)`)
-                sleep(sleepTime).then(() => {
-                    collectMaps(type, siteSelection, total, i, progress, threads)
-                })
-            } else {
-                if (res1.body.docs.length > 0 && (mapList.length + res1.body.docs.length) <= total) {
-                    let processSongs = (i2) => {
-                        if (res1.body.docs[i2] != null) {
-                            mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].directDownload })
-                            processSongs(i2 + 1)
-                        } else {
-                            progress.update(mapList.length)
-                            collectMaps(type, siteSelection, total, i + 1, progress, threads)
-                        }
-                    }
-                    processSongs(0)
-                } else {
-                    if (res1.body.docs.length == 0) {
-                        progress.update(mapList.length)
-                        progress.stop()
-                        const b1 = new cliProgress.SingleBar({
-                            format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
-                            barCompleteChar: '\u2588',
-                            barIncompleteChar: '\u2591',
-                            hideCursor: true
-                        });
-                        b1.start(mapList.length, 0);
-                        splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                            downloadMaps(type, 0, b1, newThread, siteSelection)
-                        })
+            if (res1 != null) {
+                if (res1.body.docs == null && res1.body.toLowerCase().includes("rate limit")) {
+                    let sleepTime = parseInt(res1.body.toLowerCase().split("retry in ")[1].split(" m")[0]) * 1000;
+                    if (sleepTime > 30000) {
+                        sleepTime = sleepTime / 1000
+                    } else if (sleepTime < 0) {
+                        sleepTime = 30000
                     } else {
+                        sleepTime = 1000
+                    }
+                    // console.log(`Waiting for ${sleepTime}ms (Ratelimit)`)
+                    sleep(sleepTime).then(() => {
+                        collectMaps(type, siteSelection, total, i, progress, threads)
+                    })
+                } else {
+                    if (res1.body.docs.length > 0 && (mapList.length + res1.body.docs.length) <= total) {
                         let processSongs = (i2) => {
-                            if (res1.body.docs[i2] != null && (mapList.length + 1) <= total) {
+                            if (res1.body.docs[i2] != null) {
                                 mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].directDownload })
                                 processSongs(i2 + 1)
                             } else {
                                 progress.update(mapList.length)
-                                progress.stop()
-                                const b1 = new cliProgress.SingleBar({
-                                    format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
-                                    barCompleteChar: '\u2588',
-                                    barIncompleteChar: '\u2591',
-                                    hideCursor: true
-                                });
-                                b1.start(mapList.length, 0);
-                                splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                                    downloadMaps(type, 0, b1, newThread, siteSelection)
-                                })
+                                collectMaps(type, siteSelection, total, i + 1, progress, threads)
                             }
                         }
                         processSongs(0)
+                    } else {
+                        if (res1.body.docs.length == 0) {
+                            progress.update(mapList.length)
+                            progress.stop()
+                            const b1 = new cliProgress.SingleBar({
+                                format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
+                                barCompleteChar: '\u2588',
+                                barIncompleteChar: '\u2591',
+                                hideCursor: true
+                            });
+                            b1.start(mapList.length, 0);
+                            splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
+                                downloadMaps(type, 0, b1, newThread, siteSelection)
+                            })
+                        } else {
+                            let processSongs = (i2) => {
+                                if (res1.body.docs[i2] != null && (mapList.length + 1) <= total) {
+                                    mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].directDownload })
+                                    processSongs(i2 + 1)
+                                } else {
+                                    progress.update(mapList.length)
+                                    progress.stop()
+                                    const b1 = new cliProgress.SingleBar({
+                                        format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
+                                        barCompleteChar: '\u2588',
+                                        barIncompleteChar: '\u2591',
+                                        hideCursor: true
+                                    });
+                                    b1.start(mapList.length, 0);
+                                    splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
+                                        downloadMaps(type, 0, b1, newThread, siteSelection)
+                                    })
+                                }
+                            }
+                            processSongs(0)
+                        }
                     }
                 }
-            }
+            } else {
+                console.log(res1.body)
+                console.log(error619)
+                sleep(2500).then(() => {
+                    collectMaps(type, siteSelection, total, i, progress, threads)
+                })
+            } 
         })
     } else if (siteSelection == "beatmaps.io") {
         var options = {

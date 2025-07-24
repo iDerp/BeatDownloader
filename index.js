@@ -19,14 +19,7 @@ var mapList = [];
 let downloadMaps = (type, i, progress, thread, site) => {
     if (thread[i] != null) {
         var file = fs.createWriteStream(`./${type}/${sanitize(thread[i].name)}.zip`);
-        https.get({
-            hostname: site,
-            path: thread[i].url,
-            headers: {
-                "User-Agent": `github.com/iDerp/BeatDownloader/${versionID}`,
-                "Host": site
-            }
-        }, function (response) {
+        https.get(thread[i].url, function (response) {
             response.pipe(file);
             file.on('finish', function () {
                 file.close();
@@ -48,7 +41,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
     if (siteSelection == "beatsaver.com") {
         var options = {
             method: 'GET',
-            url: `https://beatsaver.com/api/maps/${type}/${i}?automapper=1`,
+            url: `https://beatsaver.com/api/search/text/${i}?order=${type}&automapper=true`,
             headers: {
                 "User-Agent": `github.com/iDerp/BeatDownloader/${versionID}`,
                 "Host": "beatsaver.com"
@@ -74,7 +67,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                     if (res1.body.docs.length > 0 && (mapList.length + res1.body.docs.length) <= total) {
                         let processSongs = (i2) => {
                             if (res1.body.docs[i2] != null) {
-                                mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].directDownload })
+                                mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
                                 processSongs(i2 + 1)
                             } else {
                                 progress.update(mapList.length)
@@ -94,12 +87,12 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                             });
                             b1.start(mapList.length, 0);
                             splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                                downloadMaps(type, 0, b1, newThread, siteSelection)
+                                downloadMaps(type.toLowerCase(), 0, b1, newThread, siteSelection)
                             })
                         } else {
                             let processSongs = (i2) => {
                                 if (res1.body.docs[i2] != null && (mapList.length + 1) <= total) {
-                                    mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].directDownload })
+                                    mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
                                     processSongs(i2 + 1)
                                 } else {
                                     progress.update(mapList.length)
@@ -112,7 +105,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                                     });
                                     b1.start(mapList.length, 0);
                                     splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                                        downloadMaps(type, 0, b1, newThread, siteSelection)
+                                        downloadMaps(type.toLowerCase(), 0, b1, newThread, siteSelection)
                                     })
                                 }
                             }
@@ -128,66 +121,6 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                 })
             } 
         })
-    } else if (siteSelection == "beatmaps.io") {
-        var options = {
-            method: 'GET',
-            url: `https://beatmaps.io/api/search/text/${i}?sortOrder=${capitalizeFirstLetter(type)}`,
-            headers: {
-                "User-Agent": `github.com/iDerp/BeatDownloader/${versionID}`,
-                "Host": "beatmaps.io"
-            },
-            json: true
-        };
-        request(options, function (error619, res1, body1) {
-                if (res1.body.docs.length > 0 && (mapList.length + res1.body.docs.length) <= total) {
-                    let processSongs = (i2) => {
-                        if (res1.body.docs[i2] != null) {
-                            mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
-                            processSongs(i2 + 1)
-                        } else {
-                            progress.update(mapList.length)
-                            collectMaps(type, siteSelection, total, i + 1, progress, threads)
-                        }
-                    }
-                    processSongs(0)
-                } else {
-                    if (res1.body.docs.length == 0) {
-                        progress.update(mapList.length)
-                        progress.stop()
-                        const b1 = new cliProgress.SingleBar({
-                            format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
-                            barCompleteChar: '\u2588',
-                            barIncompleteChar: '\u2591',
-                            hideCursor: true
-                        });
-                        b1.start(mapList.length, 0);
-                        splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                            downloadMaps(type, 0, b1, newThread, siteSelection)
-                        })
-                    } else {
-                        let processSongs = (i2) => {
-                            if (res1.body.docs[i2] != null && (mapList.length + 1) <= total) {
-                                mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
-                                processSongs(i2 + 1)
-                            } else {
-                                progress.update(mapList.length)
-                                progress.stop()
-                                const b1 = new cliProgress.SingleBar({
-                                    format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
-                                    barCompleteChar: '\u2588',
-                                    barIncompleteChar: '\u2591',
-                                    hideCursor: true
-                                });
-                                b1.start(mapList.length, 0);
-                                splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                                    downloadMaps(type, 0, b1, newThread, siteSelection)
-                                })
-                            }
-                        }
-                        processSongs(0)
-                    }
-                }
-        })
     }
 }
 
@@ -195,8 +128,6 @@ let mainMenu = () => {
     mapList = [];
     clear()
     console.log(`BeatDownloader (Beat Saber Song Downloader) by iDerp | v${versionID}`)
-    let BeatSavercom = ["Latest", "Rating", "Hot", "Plays", "Downloads"]
-    let BeatMapsio = ["Latest", "Rating"]
     inquirer.prompt([
             {
                 type: 'list',
@@ -206,9 +137,8 @@ let mainMenu = () => {
                 choices: [
                     'Latest',
                     'Rating',
-                    'Hot',
-                    'Plays',
-                    'Downloads',
+                    'Curated',
+                    'Duration',
                     {
                         name: 'Map Creator',
                         disabled: 'Coming Soon',
@@ -249,33 +179,14 @@ let mainMenu = () => {
                             if (!fs.existsSync(`./${answers.type.toLowerCase()}`)) {
                                 fs.mkdirSync(`./${answers.type.toLowerCase()}`);
                             }
-                            collectMaps(answers.type.toLowerCase(), siteSelection.toLowerCase(), parseInt(answers2.amount), 0, b1, parseInt(answers3.amount))
+                            collectMaps(answers.type, siteSelection.toLowerCase(), parseInt(answers2.amount), 0, b1, parseInt(answers3.amount))
                         });
                     });
                 }
-                inquirer.prompt([
-                        {
-                            type: 'list',
-                            name: 'site',
-                            message: 'What website would you like to download from?',
-                            pageSize: 10,
-                            choices: [
-                                (BeatSavercom.includes(answers.type) ? 'BeatSaver.com' : { name: 'BeatSaver.com', disabled: 'Category not supported'}),
-                                (BeatMapsio.includes(answers.type) ? 'BeatMaps.io' : { name: 'BeatMaps.io', disabled: 'Category not supported'}),
-                                new inquirer.Separator(),
-                                'Back',
-                            ],
-                        },
-                    ]).then((siteSelect) => {
-                        if (siteSelect.site != "Back") {
-                            continueCategory(siteSelect.site)
-                        } else {
-                            mainMenu()
-                        }
-                    })
-                    } else {
-                        console.log("Goodbye! Don't break your VR controllers!")
-                    }
+                continueCategory("BeatSaver.com")
+            } else {
+                console.log("Goodbye! Don't break your VR controllers!")
+            }
         });
 }
 

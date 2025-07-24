@@ -67,7 +67,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                     if (res1.body.docs.length > 0 && (mapList.length + res1.body.docs.length) <= total) {
                         let processSongs = (i2) => {
                             if (res1.body.docs[i2] != null) {
-                                mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].directDownload })
+                                mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
                                 processSongs(i2 + 1)
                             } else {
                                 progress.update(mapList.length)
@@ -92,7 +92,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                         } else {
                             let processSongs = (i2) => {
                                 if (res1.body.docs[i2] != null && (mapList.length + 1) <= total) {
-                                    mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].directDownload })
+                                    mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
                                     processSongs(i2 + 1)
                                 } else {
                                     progress.update(mapList.length)
@@ -119,7 +119,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                 sleep(2500).then(() => {
                     collectMaps(type, siteSelection, total, i, progress, threads)
                 })
-                }
+            } 
         })
     }
 }
@@ -184,9 +184,9 @@ let mainMenu = () => {
                     });
                 }
                 continueCategory("BeatSaver.com")
-                    } else {
-                        console.log("Goodbye! Don't break your VR controllers!")
-                    }
+            } else {
+                console.log("Goodbye! Don't break your VR controllers!")
+            }
         });
 }
 

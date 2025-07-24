@@ -48,7 +48,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
     if (siteSelection == "beatsaver.com") {
         var options = {
             method: 'GET',
-            url: `https://beatsaver.com/api/maps/${type}/${i}?automapper=1`,
+            url: `https://beatsaver.com/api/search/text/${i}?order=${type}&automapper=true`,
             headers: {
                 "User-Agent": `github.com/iDerp/BeatDownloader/${versionID}`,
                 "Host": "beatsaver.com"

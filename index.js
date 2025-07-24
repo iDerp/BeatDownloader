@@ -126,66 +126,6 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                 sleep(2500).then(() => {
                     collectMaps(type, siteSelection, total, i, progress, threads)
                 })
-            } 
-        })
-    } else if (siteSelection == "beatmaps.io") {
-        var options = {
-            method: 'GET',
-            url: `https://beatmaps.io/api/search/text/${i}?sortOrder=${capitalizeFirstLetter(type)}`,
-            headers: {
-                "User-Agent": `github.com/iDerp/BeatDownloader/${versionID}`,
-                "Host": "beatmaps.io"
-            },
-            json: true
-        };
-        request(options, function (error619, res1, body1) {
-                if (res1.body.docs.length > 0 && (mapList.length + res1.body.docs.length) <= total) {
-                    let processSongs = (i2) => {
-                        if (res1.body.docs[i2] != null) {
-                            mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
-                            processSongs(i2 + 1)
-                        } else {
-                            progress.update(mapList.length)
-                            collectMaps(type, siteSelection, total, i + 1, progress, threads)
-                        }
-                    }
-                    processSongs(0)
-                } else {
-                    if (res1.body.docs.length == 0) {
-                        progress.update(mapList.length)
-                        progress.stop()
-                        const b1 = new cliProgress.SingleBar({
-                            format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
-                            barCompleteChar: '\u2588',
-                            barIncompleteChar: '\u2591',
-                            hideCursor: true
-                        });
-                        b1.start(mapList.length, 0);
-                        splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                            downloadMaps(type, 0, b1, newThread, siteSelection)
-                        })
-                    } else {
-                        let processSongs = (i2) => {
-                            if (res1.body.docs[i2] != null && (mapList.length + 1) <= total) {
-                                mapList.push({ name: res1.body.docs[i2].name, url: res1.body.docs[i2].versions[0].downloadURL })
-                                processSongs(i2 + 1)
-                            } else {
-                                progress.update(mapList.length)
-                                progress.stop()
-                                const b1 = new cliProgress.SingleBar({
-                                    format: 'Downloading Maps ||{bar}|| {percentage}% || {value}/{total} Maps',
-                                    barCompleteChar: '\u2588',
-                                    barIncompleteChar: '\u2591',
-                                    hideCursor: true
-                                });
-                                b1.start(mapList.length, 0);
-                                splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                                    downloadMaps(type, 0, b1, newThread, siteSelection)
-                                })
-                            }
-                        }
-                        processSongs(0)
-                    }
                 }
         })
     }
@@ -195,8 +135,6 @@ let mainMenu = () => {
     mapList = [];
     clear()
     console.log(`BeatDownloader (Beat Saber Song Downloader) by iDerp | v${versionID}`)
-    let BeatSavercom = ["Latest", "Rating", "Hot", "Plays", "Downloads"]
-    let BeatMapsio = ["Latest", "Rating"]
     inquirer.prompt([
             {
                 type: 'list',
@@ -253,26 +191,7 @@ let mainMenu = () => {
                         });
                     });
                 }
-                inquirer.prompt([
-                        {
-                            type: 'list',
-                            name: 'site',
-                            message: 'What website would you like to download from?',
-                            pageSize: 10,
-                            choices: [
-                                (BeatSavercom.includes(answers.type) ? 'BeatSaver.com' : { name: 'BeatSaver.com', disabled: 'Category not supported'}),
-                                (BeatMapsio.includes(answers.type) ? 'BeatMaps.io' : { name: 'BeatMaps.io', disabled: 'Category not supported'}),
-                                new inquirer.Separator(),
-                                'Back',
-                            ],
-                        },
-                    ]).then((siteSelect) => {
-                        if (siteSelect.site != "Back") {
-                            continueCategory(siteSelect.site)
-                        } else {
-                            mainMenu()
-                        }
-                    })
+                continueCategory("BeatSaver.com")
                     } else {
                         console.log("Goodbye! Don't break your VR controllers!")
                     }

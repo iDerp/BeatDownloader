@@ -19,14 +19,7 @@ var mapList = [];
 let downloadMaps = (type, i, progress, thread, site) => {
     if (thread[i] != null) {
         var file = fs.createWriteStream(`./${type}/${sanitize(thread[i].name)}.zip`);
-        https.get({
-            hostname: site,
-            path: thread[i].url,
-            headers: {
-                "User-Agent": `github.com/iDerp/BeatDownloader/${versionID}`,
-                "Host": site
-            }
-        }, function (response) {
+        https.get(thread[i].url, function (response) {
             response.pipe(file);
             file.on('finish', function () {
                 file.close();

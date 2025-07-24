@@ -94,7 +94,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                             });
                             b1.start(mapList.length, 0);
                             splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                                downloadMaps(type, 0, b1, newThread, siteSelection)
+                                downloadMaps(type.toLowerCase(), 0, b1, newThread, siteSelection)
                             })
                         } else {
                             let processSongs = (i2) => {
@@ -112,7 +112,7 @@ let collectMaps = (type, siteSelection, total, i, progress, threads) => {
                                     });
                                     b1.start(mapList.length, 0);
                                     splitArray(mapList, parseInt(mapList.length / threads)).forEach(newThread => {
-                                        downloadMaps(type, 0, b1, newThread, siteSelection)
+                                        downloadMaps(type.toLowerCase(), 0, b1, newThread, siteSelection)
                                     })
                                 }
                             }
@@ -144,9 +144,8 @@ let mainMenu = () => {
                 choices: [
                     'Latest',
                     'Rating',
-                    'Hot',
-                    'Plays',
-                    'Downloads',
+                    'Curated',
+                    'Duration',
                     {
                         name: 'Map Creator',
                         disabled: 'Coming Soon',
@@ -187,7 +186,7 @@ let mainMenu = () => {
                             if (!fs.existsSync(`./${answers.type.toLowerCase()}`)) {
                                 fs.mkdirSync(`./${answers.type.toLowerCase()}`);
                             }
-                            collectMaps(answers.type.toLowerCase(), siteSelection.toLowerCase(), parseInt(answers2.amount), 0, b1, parseInt(answers3.amount))
+                            collectMaps(answers.type, siteSelection.toLowerCase(), parseInt(answers2.amount), 0, b1, parseInt(answers3.amount))
                         });
                     });
                 }
